@@ -1,6 +1,5 @@
 #ifndef _UTILS_INT_H_
 #define _UTILS_INT_H_
-
 #include <stdint.h>
 
 typedef struct {

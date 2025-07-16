@@ -7,13 +7,19 @@ static TstUtils_pin stUtils_ModePin = {1, 1, 0};
 
 static pvEdgeCallback xUtils_RisingCallback = NULL;
 static pvEdgeCallback xUtils_FallingCallback = NULL;
+static pvEdgeCallback xUtils_CbFallingMode = NULL;
 
 void vUtils_SetButtonCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
 {
     if (FeEdge == eUtils_Falling)
-    { xUtils_RisingCallback = xCallback; }
-    else
     { xUtils_FallingCallback = xCallback; }
+    else
+    { xUtils_RisingCallback = xCallback; }
+}
+
+void vUtils_SetModeCallback(pvEdgeCallback xCallback)
+{
+    xUtils_CbFallingMode = xCallback;
 }
 
 void vUtils_ButtonManager(void)
@@ -42,6 +48,8 @@ void vUtils_ButtonManager(void)
     if (((millis() - stUtils_ModePin.u32LastEvent) > TIME_DEBOUNCE) && (u8ReadMode != stUtils_ModePin.u8CurrState))
     {
         stUtils_ModePin.u8CurrState = u8ReadMode;
+        if (!u8ReadMode && xUtils_CbFallingMode != NULL)
+        { xUtils_CbFallingMode(); }
     }
 
     stUtils_ButtonPin.u8PrevState = u8ReadButton;

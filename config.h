@@ -6,6 +6,7 @@
 #define PIN_DATA            4       // WS2812B GRB 800KHz
 #define TIME_DEBOUNCE       30      // debounce ms
 #define TIME_DOUBLE_CLICK   400     // double click max time ms
-#define NB_PIXELS           9
+#define NB_PIXELS           9       // strip size
+#define REFRESH_RATE_HZ     30      // animation rate
 
 #endif //_CONFIG_H_
