@@ -1,46 +1,43 @@
 /**
- * @brief Tools and misc
- * @file utils.h
+ * @brief Manage animation
+ * @file AnimMng.h
  * @version 0.1
  * @date 2025-07-17
  * @author Nello (nello.chom@protonmail.com)
  */
 
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#ifndef _ANIM_MNG_H_
+#define _ANIM_MNG_H_
 
 /*********************************************************************************
 * Includes
 *********************************************************************************/
 #include "config.h"
+#include "utils.h"
 
 /*********************************************************************************
 * Types & definitions
 *********************************************************************************/
-typedef enum {
-    eUtils_Button,
-    eUtils_Select
-} TeUtils_BtnType;
+#define ANIM_COLOR_NB 17
 
 typedef enum {
-    eUtils_Falling = 0,
-    eUtils_Rising
-} TeUtils_Edge;
+    eAnim_StateRun = 0,
+    eAnim_StateSelect
+} TeAnim_State;
 
 typedef enum {
-    eUtils_Active = 0,
-    eUtils_Idle
-} TeUtils_BtnState;
-
-typedef void (*pvEdgeCallback)(void);
+    eAnim_RunSolid = 0,
+    eAnim_RunBlink,
+    eAnim_RunFade,
+    eAnim_RunAlter,
+    eAnim_RunDual,
+    eAnim_NbRun
+} TeAnim_RunMode;
 
 /*********************************************************************************
 * External functions
 *********************************************************************************/
-void vUtils_SetButtonCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback);
-void vUtils_SetModeCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback);
-void vUtils_ButtonManager(void);
-TeUtils_BtnState eUtils_GetButtonState(TeUtils_BtnType FeType);
+void vAnim_Init(void);
+void vAnim_CoreMng(struct CRGB* Fptr);
 
-
-#endif //_UTILS_H_
+#endif //_ANIM_MNG_H_
