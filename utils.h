@@ -24,7 +24,8 @@ typedef enum {
 
 typedef enum {
     eUtils_Falling = 0,
-    eUtils_Rising
+    eUtils_Rising,
+    eUtils_Long
 } TeUtils_Edge;
 
 typedef enum {

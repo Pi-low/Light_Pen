@@ -14,14 +14,14 @@
 #include "utils.h"
 #include "AnimMng.h"
 
-CRGB leds[NB_PIXELS];
+CRGB MainLedStip[NB_PIXELS];
 uint32_t u32Timeout = 0;
 
 void setup()
 {
     pinMode(PIN_BUTTON, INPUT_PULLUP);
     pinMode(PIN_MODE, INPUT_PULLUP);
-    FastLED.addLeds<WS2812, PIN_DATA, GRB>(leds, NB_PIXELS).setCorrection(TypicalLEDStrip);
+    FastLED.addLeds<WS2812, PIN_DATA, GRB>(MainLedStip, NB_PIXELS).setCorrection(TypicalLEDStrip);
     vAnim_Init();
     FastLED.clear();
     FastLED.show();
@@ -29,5 +29,5 @@ void setup()
 
 void loop() {
     vUtils_ButtonManager();
-    vAnim_CoreMng(leds);
+    vAnim_CoreMng(MainLedStip);
 }

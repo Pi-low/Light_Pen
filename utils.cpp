@@ -30,6 +30,7 @@ static pvEdgeCallback xUtils_RisingCallback = NULL;
 static pvEdgeCallback xUtils_FallingCallback = NULL;
 static pvEdgeCallback xUtils_CbFallingMode = NULL;
 static pvEdgeCallback xUtils_CbRisingMode = NULL;
+static pvEdgeCallback xUtils_CbLongPushMode = NULL;
 
 /*********************************************************************************
 * Internal functions
@@ -61,10 +62,20 @@ void vUtils_SetButtonCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
  */
 void vUtils_SetModeCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
 {
-    if (FeEdge == eUtils_Falling)
-    { xUtils_CbFallingMode = xCallback; }
-    else
-    { xUtils_CbRisingMode = xCallback; }
+    switch(FeEdge)
+    {
+        case eUtils_Falling:
+        xUtils_CbFallingMode = xCallback;
+        break;
+
+        case eUtils_Rising:
+        xUtils_CbRisingMode = xCallback;
+        break;
+
+        case eUtils_Long:
+        xUtils_CbLongPushMode = xCallback;
+        break;
+    }
 }
 
 /**
@@ -103,6 +114,12 @@ void vUtils_ButtonManager(void)
         { xUtils_CbFallingMode(); }
         if (u8ReadMode && xUtils_CbRisingMode != NULL)
         { xUtils_CbRisingMode(); }
+    }
+    else if (((millis() - stUtils_ModePin.u32LastEvent) > TIME_LONG_PUSH) && (u8ReadMode == stUtils_ModePin.u8CurrState) && (!u8ReadMode))
+    {
+        if (xUtils_CbLongPushMode != NULL)
+        { xUtils_CbLongPushMode(); }
+        stUtils_ModePin.u32LastEvent = millis(); // will loop at [TIME_LONG_PUSH] rate
     }
 
     stUtils_ButtonPin.u8PrevState = u8ReadButton;

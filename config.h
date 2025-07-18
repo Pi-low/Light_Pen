@@ -22,6 +22,7 @@
 #define PIN_DATA            4       // WS2812B GRB 800KHz
 #define TIME_DEBOUNCE       30      // debounce ms
 #define TIME_DOUBLE_CLICK   400     // double click max time ms
+#define TIME_LONG_PUSH      2000    // long push delay in ms
 #define REFRESH_RATE_HZ     30      // animation rate
 #define DEVICE_MODE         DEVICE_SIMPLE
 #define NB_PIXELS           10      // strip size
