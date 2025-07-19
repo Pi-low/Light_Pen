@@ -12,9 +12,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <FastLED.h>
+#include <WiFi.h>
 
 #define DEVICE_SIMPLE       1       // up to 2 leds
 #define DEVICE_STRIP        2       // stip led mode
+
+//WiFi
+#define MY_WIFI_SSID        "JA-BOX"
+#define MY_WIFI_PWD         "Taninges@74"
 
 // CONFIGURATION BEGIN
 #define PIN_BUTTON          3       // trigger (active LOW)
@@ -23,7 +28,7 @@
 #define TIME_DEBOUNCE       30      // debounce ms
 #define TIME_DOUBLE_CLICK   400     // double click max time ms
 #define TIME_LONG_PUSH      2000    // long push delay in ms
-#define REFRESH_RATE_HZ     30      // animation rate
+#define REFRESH_RATE_HZ     50      // animation rate
 #define DEVICE_MODE         DEVICE_SIMPLE
 #define NB_PIXELS           10      // strip size
 

@@ -22,15 +22,15 @@
 
 typedef enum {
     eAnim_StateRun = 0,
-    eAnim_StateSelect
+    eAnim_StateSelect,
+    eAnim_eStateSubParam
 } TeAnim_State;
 
 typedef enum {
     eAnim_RunSolid = 0,
-    eAnim_RunBlink,
     eAnim_RunFade,
+    eAnim_RunBlink,
     eAnim_RunAlter,
-    eAnim_RunDual,
     eAnim_NbRun
 } TeAnim_RunMode;
 

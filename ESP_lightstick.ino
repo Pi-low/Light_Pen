@@ -15,13 +15,17 @@
 #include "AnimMng.h"
 
 CRGB MainLedStip[NB_PIXELS];
+const char* ssid = MY_WIFI_SSID;
+const char* password = MY_WIFI_PWD;
 uint32_t u32Timeout = 0;
 
 void setup()
 {
+    WiFi.begin(ssid, password);
     pinMode(PIN_BUTTON, INPUT_PULLUP);
     pinMode(PIN_MODE, INPUT_PULLUP);
     FastLED.addLeds<WS2812, PIN_DATA, GRB>(MainLedStip, NB_PIXELS).setCorrection(TypicalLEDStrip);
+    FastLED.setBrightness(255);
     vAnim_Init();
     FastLED.clear();
     FastLED.show();
