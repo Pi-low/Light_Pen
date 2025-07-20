@@ -26,6 +26,7 @@ typedef struct {
     uint8_t u8SecColorIndex;
     uint8_t u8BlinkRateIndex;     //< refers to index ctu16BlinkRates
     uint8_t u8FadeRateIndex;      //< refers to index ctu16FadeRates
+    uint8_t u8EdegeSize;
     TeAnim_RunMode eMode;
     uint8_t u8SubMenu;
 } TstAnim_Configuration;
@@ -40,12 +41,26 @@ static void vAnim_OnEntrySelect(CRGB* FpLeds);
 static void vAnim_OnExitSelect(CRGB* FpLeds);
 static void vAnim_CbClickSubMenu(void);
 static void vAnim_MenuBlink(CRGB* FpLeds, CRGB FSetColor, uint8_t Fu8Repeat);
+// Animations
 static void vAnim_RunSolid(CRGB* FpLeds);
 static void vAnim_RunBlink(CRGB* FpLeds);
 static void vAnim_RunFade(CRGB* FpLeds);
 static void vAnim_RunAlternate(CRGB* FpLeds);
+#if (DEVICE_MODE == DEVICE_STRIP)
+static void vAnim_RunGradient(CRGB* FpLeds);
+static void vAnim_RunEdge(CRGB* FpLeds);    // edges are filled with sec solor
+static void vAnim_RunBicolor(CRGB* FpLeds); // split half with main and sec color
+#endif
+// Configurations
+#if (DEVICE_MODE == DEVICE_STRIP)
+static void vAnim_MenuStipDisplay(CRGB* FpLeds, CRGB FSetColor, uint8_t Fu8Index);
+#endif
 static void vAnim_ConfigBlink(CRGB* FpLeds);
 static void vAnim_ConfigFade(CRGB* FpLeds);
+static void vAnim_ConfigGradient(CRGB* FpLeds);
+static void vAnim_ConfigBicolor(CRGB* FpLeds);
+static void vAnim_ConfigEdge(CRGB* FpLeds);
+static void vAnim_ConfigAlternate(CRGB* FpLeds);
 
 /*********************************************************************************
 * Global variables
@@ -63,7 +78,12 @@ static void (*tpvAnimations[eAnim_NbRun])(CRGB*) = { //animation function pointe
     vAnim_RunSolid,
     vAnim_RunFade,
     vAnim_RunBlink,
-    vAnim_RunAlternate
+    vAnim_RunAlternate,
+#if (DEVICE_MODE == DEVICE_STRIP)
+    vAnim_RunGradient,
+    vAnim_RunBicolor,
+    vAnim_RunEdge
+#endif
 };
 
 
@@ -71,10 +91,10 @@ static void (*tpvAnimations[eAnim_NbRun])(CRGB*) = { //animation function pointe
 * External functions
 *********************************************************************************/
 
-/**
+/*********************************************************************************
  * @brief Initialize animation engine
  * 
- */
+ ********************************************************************************/
 void vAnim_Init(void)
 {
     vUtils_SetModeCallback(eUtils_Falling, vAnim_CbClickFall);
@@ -89,15 +109,16 @@ void vAnim_Init(void)
     stAnim_MasterConfig.u8SecColorIndex = 1;
     stAnim_MasterConfig.u8BlinkRateIndex = 0;
     stAnim_MasterConfig.u8FadeRateIndex = 0;
+    stAnim_MasterConfig.u8EdegeSize = 1;
     stAnim_MasterConfig.eMode = eAnim_RunSolid;
     stAnim_MasterConfig.u8SubMenu = 0;
 }
 
-/**
+/*********************************************************************************
  * @brief Run animation engine
  * 
  * @param Fptr 
- */
+ ********************************************************************************/
 void vAnim_CoreMng(CRGB* Fptr)
 {
     switch(eAnim_CurrentState)
@@ -107,7 +128,11 @@ void vAnim_CoreMng(CRGB* Fptr)
         break;
 
         case eAnim_StateSelect:
+#if (DEVICE_MODE == DEVICE_SIMPLE)
         vAnim_MenuBlink(Fptr, CRGB::Blue, stAnim_MasterConfig.eMode + 1);
+#else
+        vAnim_MenuStipDisplay(Fptr, CRGB::Red, stAnim_MasterConfig.eMode + 1);
+#endif
         break;
 
         case eAnim_eStateSubParam:
@@ -122,6 +147,7 @@ void vAnim_CoreMng(CRGB* Fptr)
             break;
 
             case eAnim_RunAlter:
+#if (DEVICE_MODE == DEVICE_SIMPLE)
             if(stAnim_MasterConfig.u8SubMenu == 0)
             {
                 vAnim_MenuBlink(Fptr, ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex], 1);
@@ -130,11 +156,25 @@ void vAnim_CoreMng(CRGB* Fptr)
             {
                 vAnim_MenuBlink(Fptr, ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex], 2);
             }
+#else
+            vAnim_ConfigAlternate(Fptr);
+#endif
+            break;
+
+            case eAnim_RunGradient:
+            vAnim_ConfigGradient(Fptr);
+            break;
+
+            case eAnim_RunBicolor:
+            vAnim_ConfigBicolor(Fptr);
+            break;
+
+            case eAnim_RunEdge:
+            vAnim_ConfigEdge(Fptr);
             break;
 
             default:
-            fill_solid(Fptr, NB_PIXELS, CRGB::White);
-            FastLED.show();
+            vAnim_MenuBlink(Fptr, CRGB::Red, 1);
             delay(1000);
             break;
         }
@@ -146,11 +186,11 @@ void vAnim_CoreMng(CRGB* Fptr)
     }
 }
 
-/**
+/*********************************************************************************
  * @brief single color fill
  * 
  * @param FpLeds 
- */
+ ********************************************************************************/
 void vAnim_RunSolid(CRGB* FpLeds)
 {
     static uint32_t u32timeout = 0;
@@ -166,11 +206,11 @@ void vAnim_RunSolid(CRGB* FpLeds)
     }
 }
 
-/**
+/*********************************************************************************
  * @brief Single color blink
  * 
  * @param FpLeds 
- */
+ ********************************************************************************/
 void vAnim_RunBlink(CRGB* FpLeds)
 {
     static uint8_t su8FlipFlop = 0;
@@ -188,11 +228,11 @@ void vAnim_RunBlink(CRGB* FpLeds)
     }
 }
 
-/**
+/*********************************************************************************
  * @brief Single color fade in/out
  * 
  * @param FpLeds 
- */
+ ********************************************************************************/
 void vAnim_RunFade(CRGB* FpLeds)
 {
     static uint32_t su32Timeout = 0;
@@ -228,11 +268,12 @@ void vAnim_RunFade(CRGB* FpLeds)
     }
 }
 
-/**
+#if (DEVICE_MODE == DEVICE_SIMPLE)
+/*********************************************************************************
  * @brief Alternating colors
  * 
  * @param FpLeds 
- */
+ ********************************************************************************/
 void vAnim_RunAlternate(CRGB* FpLeds)
 {
     static uint32_t su32Timeout = 0;
@@ -258,6 +299,122 @@ void vAnim_RunAlternate(CRGB* FpLeds)
         FastLED.show();
     }
 }
+#else
+/*********************************************************************************
+ * @brief Alternating colors
+ * 
+ * @param FpLeds 
+ ********************************************************************************/
+void vAnim_RunAlternate(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        if (eUtils_GetButtonState(eUtils_Button) == eUtils_Active)
+        {
+            for (uint8_t u8Index = 0; u8Index < NB_PIXELS; u8Index++)
+            {
+                if ((u8Index % 2) == 0)
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex];
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex];
+                }
+            }
+        }
+        FastLED.show();
+    }
+}
+#endif
+
+#if (DEVICE_MODE == DEVICE_STRIP)
+/*********************************************************************************
+ * @brief Gradient with main and secondary color
+ * 
+ * @param FpLeds 
+ ********************************************************************************/
+void vAnim_RunGradient(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        if (eUtils_GetButtonState(eUtils_Button) == eUtils_Active)
+        {
+            CHSV Main = rgb2hsv_approximate(ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex]);
+            CHSV Secondary = rgb2hsv_approximate(ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex]);
+            fill_gradient(FpLeds, NB_PIXELS, Main, Secondary);
+        }
+        FastLED.show();
+    }
+}
+
+/*********************************************************************************
+ * @brief Edge fill with secondary color
+ * 
+ * @param FpLeds 
+ ********************************************************************************/
+void vAnim_RunEdge(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        if (eUtils_GetButtonState(eUtils_Button) == eUtils_Active)
+        {
+            for (uint8_t u8Index = 0; u8Index < NB_PIXELS; u8Index++)
+            {
+                if (u8Index < stAnim_MasterConfig.u8EdegeSize || u8Index >= (NB_PIXELS - stAnim_MasterConfig.u8EdegeSize))
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex];
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex];
+                }
+            }
+        }
+        FastLED.show();
+    }
+}
+
+/*********************************************************************************
+ * @brief Bicolor fill, split half with main and sec color
+ * 
+ * @param FpLeds 
+ ********************************************************************************/
+void vAnim_RunBicolor(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        if (eUtils_GetButtonState(eUtils_Button) == eUtils_Active)
+        {
+            for (uint8_t u8Index = 0; u8Index < NB_PIXELS; u8Index++)
+            {
+                if (u8Index < (NB_PIXELS / 2))
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex];
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex];
+                }
+            }
+        }
+        FastLED.show();
+    }
+}
+
+#endif //DEVICE_STRIP
 
 void vAnim_ConfigBlink(CRGB* FpLeds)
 {
@@ -312,6 +469,152 @@ void vAnim_ConfigFade(CRGB* FpLeds)
         }
         
         nscale8(FpLeds, NB_PIXELS, su8FadeIndex);
+        FastLED.show();
+    }
+}
+
+/****************************************************************************
+ * @brief Configure gradient fill
+ * 
+ * @param FpLeds 
+****************************************************************************/
+void vAnim_ConfigGradient(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    static uint32_t su32TimeoutBlink = 0;
+    static uint8_t su8FlipFlop = 0;
+
+    if (millis() > su32TimeoutBlink)
+    {
+        su32TimeoutBlink = millis() + 300;
+        su8FlipFlop ^= 1;
+    }
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        CHSV Main = rgb2hsv_approximate(ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex]);
+        CHSV Secondary = rgb2hsv_approximate(ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex]);
+        if (su8FlipFlop)
+        {
+            if (!stAnim_MasterConfig.u8SubMenu)
+            { Main = CHSV(0, 0, 0); }
+            else
+            { Secondary = CHSV(0, 0, 0); }
+        }
+        
+        fill_gradient(FpLeds, NB_PIXELS, Main, Secondary);
+        FastLED.show();
+    }
+}
+
+void vAnim_ConfigBicolor(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    static uint32_t su32TimeoutBlink = 0;
+    static uint8_t su8FlipFlop = 0;
+
+    if (millis() > su32TimeoutBlink)
+    {
+        su32TimeoutBlink = millis() + 300;
+        su8FlipFlop ^= 1;
+    }
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        
+        for (uint8_t u8Index = 0; u8Index < NB_PIXELS; u8Index++)
+        {
+            if (u8Index < (NB_PIXELS / 2))
+            {
+                if (!stAnim_MasterConfig.u8SubMenu)
+                {
+                    FpLeds[u8Index] = (su8FlipFlop) ? ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex] : CRGB::Black;
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex];
+                }
+                
+            }
+            else
+            {
+                if (stAnim_MasterConfig.u8SubMenu)
+                {
+                    FpLeds[u8Index] = (su8FlipFlop) ? ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex] : CRGB::Black;
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex];
+                }
+            }
+        }
+    
+        FastLED.show();
+    }
+}
+
+void vAnim_ConfigAlternate(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    static uint32_t su32TimeoutBlink = 0;
+    static uint8_t su8FlipFlop = 0;
+
+    if (millis() > su32TimeoutBlink)
+    {
+        su32TimeoutBlink = millis() + 300;
+        su8FlipFlop ^= 1;
+    }
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        
+        for (uint8_t u8Index = 0; u8Index < 4; u8Index++)
+        {
+            if (u8Index < 2)
+            {
+                if (!stAnim_MasterConfig.u8SubMenu)
+                {
+                    FpLeds[u8Index] = (su8FlipFlop) ? ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex] : CRGB::Black;
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8MainColorIndex];
+                }
+                
+            }
+            else
+            {
+                if (stAnim_MasterConfig.u8SubMenu)
+                {
+                    FpLeds[u8Index] = (su8FlipFlop) ? ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex] : CRGB::Black;
+                }
+                else
+                {
+                    FpLeds[u8Index] = ctrgb_Palette[stAnim_MasterConfig.u8SecColorIndex];
+                }
+            }
+        }
+        FastLED.show();
+    }
+}
+
+void vAnim_ConfigEdge(CRGB* FpLeds)
+{
+    static uint32_t su32Timeout = 0;
+    if (millis() > su32Timeout)
+    {
+        su32Timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        for (uint8_t u8Index = 0; u8Index < NB_PIXELS; u8Index++)
+        {
+            if (u8Index < stAnim_MasterConfig.u8EdegeSize || u8Index >= (NB_PIXELS - stAnim_MasterConfig.u8EdegeSize))
+            {
+                FpLeds[u8Index] = CRGB::White;
+            }
+        }
         FastLED.show();
     }
 }
@@ -373,9 +676,20 @@ void vAnim_CbClickRise(void)
                 break;
 
                 case eAnim_RunAlter:
+#if (DEVICE_MODE == DEVICE_SIMPLE)
                 stAnim_MasterConfig.u8BlinkRateIndex++;
                 stAnim_MasterConfig.u8BlinkRateIndex %= 3;
+#else
+
+#endif
                 break;
+#if (DEVICE_MODE == DEVICE_STRIP)
+                case eAnim_RunEdge:
+                stAnim_MasterConfig.u8EdegeSize++;
+                stAnim_MasterConfig.u8EdegeSize %= 9;
+                stAnim_MasterConfig.u8EdegeSize++;
+                break;
+#endif
             }
             break;
 
@@ -402,6 +716,8 @@ void vAnim_CbClickRise(void)
                 break;
 
                 case eAnim_RunAlter:
+                case eAnim_RunGradient:
+                case eAnim_RunBicolor:
                 if (stAnim_MasterConfig.u8SubMenu == 0)
                 {
                     stAnim_MasterConfig.u8MainColorIndex++;
@@ -412,6 +728,12 @@ void vAnim_CbClickRise(void)
                     stAnim_MasterConfig.u8SecColorIndex++;
                     stAnim_MasterConfig.u8SecColorIndex %= ANIM_COLOR_NB;
                 }
+                break;
+
+                case eAnim_RunEdge:
+                stAnim_MasterConfig.u8EdegeSize++;
+                stAnim_MasterConfig.u8EdegeSize %= 9;
+                stAnim_MasterConfig.u8EdegeSize++;
                 break;
 
                 default:
@@ -431,7 +753,13 @@ void vAnim_CbClickSubMenu(void)
     {
         eAnim_CurrentState = eAnim_eStateSubParam;
     }
-    else if ((eAnim_CurrentState == eAnim_eStateSubParam) && (stAnim_MasterConfig.eMode == eAnim_RunAlter))
+    else if ((eAnim_CurrentState == eAnim_eStateSubParam)
+#if (DEVICE_MODE == DEVICE_SIMPLE)
+     && (stAnim_MasterConfig.eMode == eAnim_RunAlter)
+#else
+    && ((stAnim_MasterConfig.eMode >= eAnim_RunAlter) && (stAnim_MasterConfig.eMode < eAnim_RunEdge))
+#endif
+    )
     {
         stAnim_MasterConfig.u8SubMenu++;
         stAnim_MasterConfig.u8SubMenu %= 2;
@@ -455,6 +783,30 @@ void vAnim_OnExitSelect(CRGB* FpLeds)
     FastLED.clear();
     FastLED.show();
 }
+
+#if (DEVICE_MODE == DEVICE_STRIP)
+/****************************************************************************
+ * @brief Display number sector, 3 whites separated by 1 black
+ * 
+ * @param FpLeds 
+ * @param FSetColor 
+ * @param Fu8Index 
+****************************************************************************/
+void vAnim_MenuStipDisplay(CRGB* FpLeds, CRGB FSetColor, uint8_t Fu8Index)
+{
+    static uint32_t su32timeout = 0;
+    if (millis() > su32timeout)
+    {
+        su32timeout = millis() + REFRESH_TIMEOUT;
+        FastLED.clear();
+        for (uint8_t i = 0; i < Fu8Index; i++)
+        {
+            FpLeds[i*4] = FSetColor;
+        }
+        FastLED.show();
+    }
+}
+#endif
 
 void vAnim_MenuBlink(CRGB* FpLeds, CRGB FSetColor, uint8_t Fu8Repeat)
 {

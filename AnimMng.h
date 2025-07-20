@@ -31,6 +31,11 @@ typedef enum {
     eAnim_RunFade,
     eAnim_RunBlink,
     eAnim_RunAlter,
+#if (DEVICE_MODE == DEVICE_STRIP)
+    eAnim_RunGradient,
+    eAnim_RunBicolor,
+    eAnim_RunEdge,    // edges are filled with sec solor
+#endif
     eAnim_NbRun
 } TeAnim_RunMode;
 

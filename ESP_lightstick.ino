@@ -25,7 +25,11 @@ void setup()
     pinMode(PIN_BUTTON, INPUT_PULLUP);
     pinMode(PIN_MODE, INPUT_PULLUP);
     FastLED.addLeds<WS2812, PIN_DATA, GRB>(MainLedStip, NB_PIXELS).setCorrection(TypicalLEDStrip);
+#if (DEVICE_MODE == DEVICE_SIMPLE)
     FastLED.setBrightness(255);
+#else
+    FastLED.setBrightness(180);
+#endif
     vAnim_Init();
     FastLED.clear();
     FastLED.show();

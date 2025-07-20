@@ -29,7 +29,7 @@
 #define TIME_DOUBLE_CLICK   400     // double click max time ms
 #define TIME_LONG_PUSH      2000    // long push delay in ms
 #define REFRESH_RATE_HZ     50      // animation rate
-#define DEVICE_MODE         DEVICE_SIMPLE
-#define NB_PIXELS           10      // strip size
+#define DEVICE_MODE         DEVICE_STRIP
+#define NB_PIXELS           30      // strip size
 
 #endif //_CONFIG_H_
