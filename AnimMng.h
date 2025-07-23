@@ -18,26 +18,6 @@
 /*********************************************************************************
 * Types & definitions
 *********************************************************************************/
-#define ANIM_COLOR_NB 17
-
-typedef enum {
-    eAnim_StateRun = 0,
-    eAnim_StateSelect,
-    eAnim_eStateSubParam
-} TeAnim_State;
-
-typedef enum {
-    eAnim_RunSolid = 0,
-    eAnim_RunFade,
-    eAnim_RunBlink,
-    eAnim_RunAlter,
-#if (DEVICE_MODE == DEVICE_STRIP)
-    eAnim_RunGradient,
-    eAnim_RunBicolor,
-    eAnim_RunEdge,    // edges are filled with sec solor
-#endif
-    eAnim_NbRun
-} TeAnim_RunMode;
 
 /*********************************************************************************
 * External functions

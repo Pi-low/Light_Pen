@@ -12,24 +12,29 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <FastLED.h>
-#include <WiFi.h>
 
-#define DEVICE_SIMPLE       1       // up to 2 leds
-#define DEVICE_STRIP        2       // stip led mode
+/****** /!\ DO NOT CHANGE /!\ ******/
+#define DEVICE_SIMPLE       1       // single pixel
+#define DEVICE_STRIP        2       // led strip configuration
+/***********************************/
 
-//WiFi
-#define MY_WIFI_SSID        "JA-BOX"
-#define MY_WIFI_PWD         "Taninges@74"
+#define DEVICE_MODE         DEVICE_SIMPLE ///< configure led mode
 
-// CONFIGURATION BEGIN
+// PINOUT CONFIGURATION
 #define PIN_BUTTON          3       // trigger (active LOW)
 #define PIN_MODE            2       // mode select (active LOW)
 #define PIN_DATA            4       // WS2812B GRB 800KHz
+
+// TIMINGS
 #define TIME_DEBOUNCE       30      // debounce ms
 #define TIME_DOUBLE_CLICK   400     // double click max time ms
 #define TIME_LONG_PUSH      2000    // long push delay in ms
 #define REFRESH_RATE_HZ     50      // animation rate
-#define DEVICE_MODE         DEVICE_STRIP
-#define NB_PIXELS           30      // strip size
+
+#if (DEVICE_MODE == DEVICE_SIMPLE)
+#define NB_PIXELS           DEVICE_SIMPLE // onse single led
+#else
+#define NB_PIXELS           30      // led strip size
+#endif
 
 #endif //_CONFIG_H_

@@ -40,12 +40,12 @@ static pvEdgeCallback xUtils_CbLongPushMode = NULL;
 * External functions
 *********************************************************************************/
 
-/**
+/*********************************************************************************
  * @brief Setup main button callback function
  * 
  * @param FeEdge 
  * @param xCallback 
- */
+ ********************************************************************************/
 void vUtils_SetButtonCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
 {
     if (FeEdge == eUtils_Falling)
@@ -54,12 +54,12 @@ void vUtils_SetButtonCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
     { xUtils_RisingCallback = xCallback; }
 }
 
-/**
+/*********************************************************************************
  * @brief Setup mode button callback function
  * 
  * @param FeEdge 
  * @param xCallback 
- */
+ ********************************************************************************/
 void vUtils_SetModeCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
 {
     switch(FeEdge)
@@ -78,10 +78,10 @@ void vUtils_SetModeCallback(TeUtils_Edge FeEdge, pvEdgeCallback xCallback)
     }
 }
 
-/**
+/*********************************************************************************
  * @brief Manage buttons interface
  *
- */
+ ********************************************************************************/
 void vUtils_ButtonManager(void)
 {
     uint8_t u8ReadButton = digitalRead(PIN_BUTTON);
@@ -126,12 +126,12 @@ void vUtils_ButtonManager(void)
     stUtils_ModePin.u8PrevState = u8ReadMode;
 }
 
-/**
+/*********************************************************************************
  * @brief Get button state
  * 
  * @param FeType 
  * @return TeUtils_BtnState 
- */
+ ********************************************************************************/
 TeUtils_BtnState eUtils_GetButtonState(TeUtils_BtnType FeType)
 {
     return (FeType == eUtils_Button) ? (TeUtils_BtnState)stUtils_ButtonPin.u8CurrState : (TeUtils_BtnState)stUtils_ModePin.u8CurrState;
