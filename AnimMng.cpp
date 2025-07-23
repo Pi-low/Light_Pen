@@ -105,8 +105,8 @@ void vAnim_Init(void)
     {
         ctrgb_Palette[u8Index + 1] = CHSV(u8Index * 16, 255, 255);
     }
-    stAnim_MasterConfig.u8MainColorIndex = 0;
-    stAnim_MasterConfig.u8SecColorIndex = 1;
+    stAnim_MasterConfig.u8MainColorIndex = 1;
+    stAnim_MasterConfig.u8SecColorIndex = 4;
     stAnim_MasterConfig.u8BlinkRateIndex = 0;
     stAnim_MasterConfig.u8FadeRateIndex = 0;
     stAnim_MasterConfig.u8EdegeSize = 1;
@@ -686,8 +686,9 @@ void vAnim_CbClickRise(void)
 #if (DEVICE_MODE == DEVICE_STRIP)
                 case eAnim_RunEdge:
                 stAnim_MasterConfig.u8EdegeSize++;
-                stAnim_MasterConfig.u8EdegeSize %= 9;
-                stAnim_MasterConfig.u8EdegeSize++;
+                stAnim_MasterConfig.u8EdegeSize %= 11;
+                if ((stAnim_MasterConfig.u8EdegeSize > 10) || (!stAnim_MasterConfig.u8EdegeSize))
+                { stAnim_MasterConfig.u8EdegeSize = 1; }
                 break;
 #endif
             }
@@ -732,8 +733,9 @@ void vAnim_CbClickRise(void)
 
                 case eAnim_RunEdge:
                 stAnim_MasterConfig.u8EdegeSize++;
-                stAnim_MasterConfig.u8EdegeSize %= 9;
-                stAnim_MasterConfig.u8EdegeSize++;
+                stAnim_MasterConfig.u8EdegeSize %= 11;
+                if ((stAnim_MasterConfig.u8EdegeSize > 10) || (!stAnim_MasterConfig.u8EdegeSize))
+                { stAnim_MasterConfig.u8EdegeSize = 1; }
                 break;
 
                 default:
@@ -768,7 +770,7 @@ void vAnim_CbClickSubMenu(void)
 
 void vAnim_OnEntrySelect(CRGB* FpLeds)
 {
-    fill_solid(FpLeds, NB_PIXELS, CRGB::White);
+    fill_solid(FpLeds, NB_PIXELS, CRGB::Blue);
     FastLED.show();
     delay(500);
     FastLED.clear();
